@@ -1,12 +1,10 @@
 .banner {
-  width: 100%;
-  height: 400px;
+  max-height: 400px;
   margin-bottom: 5rem;
 
   img {
     max-height: 400px;
-    width: 1440px;
-    object-fit: cover;
+    width: 100%;
   }
 }
 
@@ -57,18 +55,28 @@
 
 .sugestions {
   max-width: 780px;
+  height: 160px;
   margin: 0 auto;
-  padding: 2rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  padding: 3rem 2rem;
   border-top: 1px solid var(--info);
+
+  .prev {
+    float: left;
+    text-align: left;
+    width: 200px;
+  }
+
+  .next {
+    float: right;
+    text-align: right;
+    width: 200px;
+  }
 
   p {
     font-size: 1.125rem;
-    font-weight: 600;
+    font-weight: 400;
     margin-bottom: 0.5rem;
-    color: var(--info);
+    color: var(--heading);
   }
 
   a {
@@ -80,8 +88,9 @@
       color: var(--highlight);
     }
   }
+}
 
-  div + div {
-    text-align: right;
-  }
+.comments {
+  width: 100%;
+  padding: 2rem 0;
 }

@@ -36,25 +36,25 @@ interface Post {
 
 interface PostProps {
   post: Post;
-  // sugestions?: {
-  //   previousPost?: {
-  //     uid: string;
-  //     data: {
-  //       title: string;
-  //     }
-  //   }[];
-  //   nextPost?: {
-  //     uid: string;
-  //     data: {
-  //       title: string;
-  //     }
-  //   }[];
-  // }
+  sugestions?: {
+    previousPost?: {
+      uid: string;
+      data: {
+        title: string;
+      }
+    }[];
+    nextPost?: {
+      uid: string;
+      data: {
+        title: string;
+      }
+    }[];
+  }
 }
 
 export default function Post({
   post,
-  // sugestions
+  sugestions
 }: PostProps): JSX.Element {
 
   const router = useRouter();
@@ -117,9 +117,9 @@ export default function Post({
             ))}
           </div>
         </article>
-        {/* <section className={styles.sugestions}>
+        <section className={styles.sugestions}>
           {sugestions.previousPost[0] ? (
-            <div>
+            <div className={styles.prev}>
               <p>{sugestions.previousPost[0].data.title}</p>
               <Link href={`/post/${sugestions.previousPost[0].uid}`}>
                 <a>Post anterior</a>
@@ -127,14 +127,34 @@ export default function Post({
             </div>
           ) : null}
           {sugestions.nextPost[0] ? (
-            <div>
+            <div className={styles.next}>
               <p>{sugestions.nextPost[0].data.title}</p>
               <Link href={`/post/${sugestions.nextPost[0].uid}`}>
                 <a>Próximo post</a>
               </Link>
             </div>
           ) : null}
-        </section> */}
+        </section>
+        <section 
+          className={styles.comments}
+          ref={
+            element => {
+              if (!element) {
+                return
+              }
+
+              const scriptElement = document.createElement('script')
+              scriptElement.setAttribute('src', 'https://utteranc.es/client.js')
+              scriptElement.setAttribute('repo', 'suelensalca/react-desafio06')
+              scriptElement.setAttribute('issue-term', 'title')
+              scriptElement.setAttribute('label', 'Comments')
+              scriptElement.setAttribute('theme', 'github-dark')
+              scriptElement.setAttribute('crossorigin', 'anonymous')
+              scriptElement.setAttribute('async', 'true')
+              element.replaceChildren(scriptElement)
+            }
+          }
+        />
       </main>
     </>
   )
@@ -167,21 +187,21 @@ export const getStaticProps: GetStaticProps = async context => {
   const prismic = getPrismicClient();
   const response = await prismic.getByUID('posts', String(slug), {});
 
-  // const previousPost = await prismic.query([
-  //   Prismic.Predicates.at('document.type', 'posts')
-  // ], {
-  //   pageSize: 1,
-  //   after: response.id,
-  //   orderings: '[document.first_publication_date]',
-  // });
+  const previousPost = await prismic.query([
+    Prismic.Predicates.at('document.type', 'posts')
+  ], {
+    pageSize: 1,
+    after: response.id,
+    orderings: '[document.first_publication_date]',
+  });
 
-  // const nextPost = await prismic.query([
-  //   Prismic.Predicates.at('document.type', 'posts')
-  // ], {
-  //   pageSize: 1,
-  //   after: response.id,
-  //   orderings: '[document.first_publication_date desc]',
-  // })
+  const nextPost = await prismic.query([
+    Prismic.Predicates.at('document.type', 'posts')
+  ], {
+    pageSize: 1,
+    after: response.id,
+    orderings: '[document.first_publication_date desc]',
+  })
 
   const post: Post = {
     uid: response.uid,
@@ -195,15 +215,15 @@ export const getStaticProps: GetStaticProps = async context => {
     }
   }
 
-  // const sugestions = {
-  //   previousPost: previousPost?.results,
-  //   nextPost: nextPost?.results,
-  // }
+  const sugestions = {
+    previousPost: previousPost?.results,
+    nextPost: nextPost?.results,
+  }
 
   return {
     props: {
       post,
-      // sugestions
+      sugestions
     },
     revalidate: 60 * 30, //30 minutes
   }
