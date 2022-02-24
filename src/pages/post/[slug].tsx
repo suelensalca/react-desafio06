@@ -18,6 +18,7 @@ import { ptBR } from 'date-fns/locale';
 interface Post {
   uid: string;
   first_publication_date: string | null;
+  last_publication_date: string | null;
   data: {
     title: string;
     subtitle: string;
@@ -36,6 +37,7 @@ interface Post {
 
 interface PostProps {
   post: Post;
+  preview: boolean;
   sugestions?: {
     previousPost?: {
       uid: string;
@@ -54,6 +56,7 @@ interface PostProps {
 
 export default function Post({
   post,
+  preview,
   sugestions
 }: PostProps): JSX.Element {
 
@@ -94,8 +97,7 @@ export default function Post({
         <article className={styles.post}>
           <h1>{post.data.title}</h1>
           <div className={styles.info}>
-            <time><FiCalendar size={20}/>
-             {format(
+            <time><FiCalendar size={20}/> {format(
                parseISO(post.first_publication_date),
                'dd MMM yyyy',
                {locale: ptBR}
@@ -103,6 +105,16 @@ export default function Post({
             </time>
             <span><FiUser size={20} /> {post.data.author}</span>
             <span><FiClock size={20} /> {`${readTime} min`}</span>
+            <div>
+              <p>
+                *editado em {format(
+                  parseISO(post.last_publication_date),
+                  'dd MMM yyyy',
+                  {locale: ptBR})} às {format(
+                  parseISO(post.last_publication_date),
+                  'HH:mm')}
+              </p>
+            </div>
           </div>
           <div className={styles.postContent}>
             {post.data.content.map(postContent => (
@@ -155,6 +167,15 @@ export default function Post({
             }
           }
         />
+        <section className={styles.preview}>
+          {preview && (
+            <aside>
+              <Link href="/api/exit-preview">
+                <a>Sair do modo Preview</a>
+              </Link>
+            </aside>
+          )}
+        </section>
       </main>
     </>
   )
@@ -181,11 +202,17 @@ export const getStaticPaths: GetStaticPaths = async () => {
   }
 };
 
-export const getStaticProps: GetStaticProps = async context => {
-  const { slug } = context.params;
+export const getStaticProps: GetStaticProps = async ({
+  params,
+  preview = false,
+  previewData,
+}) => {
+  const { slug } = params;
 
   const prismic = getPrismicClient();
-  const response = await prismic.getByUID('posts', String(slug), {});
+  const response = await prismic.getByUID('posts', String(slug), {
+    ref: previewData?.ref ?? null,
+  });
 
   const previousPost = await prismic.query([
     Prismic.Predicates.at('document.type', 'posts')
@@ -206,6 +233,7 @@ export const getStaticProps: GetStaticProps = async context => {
   const post: Post = {
     uid: response.uid,
     first_publication_date: response.first_publication_date,
+    last_publication_date: response.last_publication_date,
     data: {
       title: response.data.title,
       subtitle: response.data.subtitle,
@@ -220,9 +248,12 @@ export const getStaticProps: GetStaticProps = async context => {
     nextPost: nextPost?.results,
   }
 
+  const postResponse = await prismic.query([])
+
   return {
     props: {
       post,
+      preview,
       sugestions
     },
     revalidate: 60 * 30, //30 minutes
